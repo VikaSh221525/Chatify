@@ -3,9 +3,13 @@ import express from "express";
 import authRoutes from "./routes/auth.routes.js";
 import messageRoutes from "./routes/message.route.js";
 import path from "path";
+import { connectToDB } from "./lib/db.js";
+import cookieParser from "cookie-parser";
 
 const app = express();
-app.use(express.json());
+app.use(express.json());  // for req.body to get data
+app.use(cookieParser())
+connectToDB();
 
 const __dirname = path.resolve()
 
