@@ -2,6 +2,7 @@ import userModel from "../models/User.model.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/utils.js";
 import { sendWelcomeEmail } from "../emails/emailHandlers.js";
+import cloudinary from "../lib/cloudinary.js";
 
 export async function registerHandler(req, res) {
     const { fullName, email, password } = req.body;
@@ -50,6 +51,9 @@ export async function registerHandler(req, res) {
 
 export async function loginHandler(req, res) {
     const { email, password } = req.body;
+    if(!email || !password) {
+        return res.status(400).json({ message: "All fields are required" });
+    }
     try {
         const user  = await userModel.findOne({ email });
         if (!user) {
@@ -76,3 +80,26 @@ export function logoutHandler(req, res) {
     res.status(200).json({ message: "User logged out successfully" });
 }
 
+export async function updateProfileHandler(req, res){
+    try {
+        const {profilePic} = req.body;
+        if(!profilePic) return res.status(400).json({ message: "Profile picture is required" });
+
+        // from middleware
+        const userId = req.user._id;
+        const uploadResponse = await cloudinary.uploader.upload(profilePic, {
+            folder: "profile_pics",
+            public_id: userId
+        });
+        const updatedUser = await userModel.findByIdAndUpdate(userId, {
+            profilePic: uploadResponse.secure_url
+        }, {new: true}).select("-password");
+        if(updatedUser){
+            res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
+        }
+
+    } catch (error) {
+        console.log("Error updating profile", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
