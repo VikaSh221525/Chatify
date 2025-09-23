@@ -21,7 +21,7 @@ const aj = arcjet({
         slidingWindow({
             mode: "LIVE",
             //characteristics: ["ip.src"],
-            max: 100,
+            max: 50,
             interval: 60,
         }),
     ],
