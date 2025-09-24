@@ -2,6 +2,7 @@ import React from 'react'
 import Mainroutes from './routes/Mainroutes'
 
 const App = () => {
+  
   return (
     <div className='min-h-screen bg-slate-900 relative flex items-center justify-center p-4 overflow-hidden'>
       <div className='absolute inset-0' style={{
