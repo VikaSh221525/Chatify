@@ -62,7 +62,7 @@ const SignUpPage = () => {
                                 <button className='auth-btn' type='submit' disabled={isSigningUp}>
                                     {isSigningUp ? (
                                         <span>
-                                            <Loader2 className='w-5 h-5 animate-spin mr-2' />
+                                            <Loader2 className='w-5 h-5 animate-spin mr-2 inline-block' />
                                             Signing Up...
                                         </span>
                                     ) : (
