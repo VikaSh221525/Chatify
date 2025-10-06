@@ -12,7 +12,7 @@ const Mainroutes = () => {
         checkAuth();
     }, [checkAuth]);
 
-    console.log({ authUser });
+    // console.log({ authUser });
 
     if(isCheckingAuth){
         return <PageLoader/>
