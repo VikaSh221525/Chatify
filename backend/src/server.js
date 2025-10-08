@@ -5,9 +5,14 @@ import messageRoutes from "./routes/message.route.js";
 import path from "path";
 import { connectToDB } from "./lib/db.js";
 import cookieParser from "cookie-parser";
+import cors from "cors";
+import { app, server } from "./lib/socket.js";
 
-const app = express();
-app.use(express.json());  // for req.body to get data
+app.use(cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true
+}))
+app.use(express.json({limit: "10mb"}));  // for req.body to get data
 app.use(cookieParser())
 connectToDB();
 
@@ -27,6 +32,6 @@ if(process.env.NODE_ENV === "production"){
 }
 
 
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });

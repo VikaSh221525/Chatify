@@ -24,7 +24,7 @@ export async function registerHandler(req, res) {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = await userModel.create({ fullName, email, password: hashedPassword });
+        const newUser = new userModel({ fullName, email, password: hashedPassword });
         if (newUser) {
             const saveUser = await newUser.save();
             generateToken(saveUser._id, res);
