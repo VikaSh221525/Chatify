@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { toast } from "react-hot-toast";
 import { axiosInstance } from "../lib/axios";
+import { useAuthStore } from "./useAuthStore";
 
 export const useChatStore = create((set, get) => ({
     allContacts: [],
@@ -28,7 +29,7 @@ export const useChatStore = create((set, get) => ({
             const response = await axiosInstance.get("/messages/contacts");
             set({allContacts: response.data});
         } catch (error) {
-            toast.error(error.response.data.message);
+            toast.error(error.response?.data?.message || "Something went wrong");
         } finally {
             set({isUsersLoading: false});
         }
@@ -40,7 +41,7 @@ export const useChatStore = create((set, get) => ({
             const response = await axiosInstance.get("/messages/chats");
             set({chats: response.data});
         } catch (error) {
-            toast.error(error.response.data.message);
+            toast.error(error.response?.data?.message || "Something went wrong");
         } finally {
             set({isUsersLoading: false});
         }
@@ -52,9 +53,34 @@ export const useChatStore = create((set, get) => ({
             const response = await axiosInstance.get(`/messages/${userId}`);
             set({messages: response.data});
         } catch (error) {
-            toast.error(error.response.data.message);
+            toast.error(error.response?.data?.message || "Something went wrong");
         } finally {
             set({isMessagesLoading: false});
+        }
+    },
+
+    sendMessage: async(messageData)=>{
+        const {selectedUser, messages} = get();
+        const {authUser} = useAuthStore.getState();
+
+        // Optimistic update really important
+        const tempId = `temp-${Date.now()}`;
+        const optimisticMessage = {
+            _id: tempId,
+            sender: authUser._id,
+            receiver: selectedUser._id,
+            text: messageData.text,
+            image: messageData.image,
+            createdAt: new Date().toISOString(),
+        }
+        set({messages: [...messages, optimisticMessage]});
+        try {
+            const response = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
+            set({messages: messages.concat(response.data)});
+        } catch (error) {
+            // remove optimistic message on failure
+            set({messages: messages.filter((msg) => msg._id !== tempId)});
+            toast.error(error.response?.data?.message || "Something went wrong");
         }
     }
 
