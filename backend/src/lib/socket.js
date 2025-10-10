@@ -22,18 +22,38 @@ const userSocketMap = {}; //{userId : socketId}
 
 // handle connection
 io.on("connection", (socket) => {
-    console.log("a user connected", socket.user.fullName);
+    try {
+        if (!socket.user || !socket.userId) {
+            console.error("No user data in socket");
+            return socket.disconnect(true);
+        }
 
-    const userId = socket.userId;
-    userSocketMap[userId] = socket.id;
+        console.log(`User connected: ${socket.user.fullName} (${socket.userId})`);
+        
+        const userId = socket.userId;
+        userSocketMap[userId] = socket.id;
 
-    // io.emit() is send events to all connected clients
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
-    socket.on("disconnect", () => {
-        console.log("a user disconnected", socket.user.fullName);
-        delete userSocketMap[userId];
+        // Notify all clients about online users
         io.emit("getOnlineUsers", Object.keys(userSocketMap));
-    })
-})
+
+        // Handle disconnection
+        socket.on("disconnect", (reason) => {
+            console.log(`User disconnected: ${socket.user?.fullName || 'Unknown'} (${userId}) - ${reason}`);
+            if (userSocketMap[userId] === socket.id) {
+                delete userSocketMap[userId];
+                io.emit("getOnlineUsers", Object.keys(userSocketMap));
+            }
+        });
+
+        // Handle errors
+        socket.on("error", (error) => {
+            console.error(`Socket error for user ${socket.user?.fullName || 'Unknown'}:`, error);
+        });
+
+    } catch (error) {
+        console.error("Error in socket connection:", error);
+        socket.disconnect(true);
+    }
+});
 
 export {io, app, server}
