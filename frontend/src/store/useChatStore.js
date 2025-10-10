@@ -82,7 +82,40 @@ export const useChatStore = create((set, get) => ({
             set({messages: messages.filter((msg) => msg._id !== tempId)});
             toast.error(error.response?.data?.message || "Something went wrong");
         }
+    },
+
+    subscribeToMessages:()=>{
+        const {selectedUser, isSoundEnabled} = get();
+        if(!selectedUser){
+            return;
+        }
+        const {socket} = useAuthStore.getState();
+        if(!socket){
+            return;
+        }
+        socket.emit("joinChat", selectedUser._id);
+        socket.on("getMessage", (newMessage)=>{
+            // imp
+            const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+            if(isMessageSentFromSelectedUser){
+                return;
+            }
+
+            const {messages} = get();
+            set({messages: [...messages, newMessage]});
+
+            if(isSoundEnabled){
+                new Audio("/notification.mp3").play().catch((e)=>console.log("Audio Play failed", e));
+            }
+        })
+    },
+
+    unsubscribeFromMessage: () =>{
+        const {socket} = useAuthStore.getState();
+        if(!socket){
+            return;
+        }
+        socket.emit("leaveChat");
+        socket.off("getMessage");
     }
-
-
 }))

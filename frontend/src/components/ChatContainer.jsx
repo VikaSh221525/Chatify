@@ -7,17 +7,22 @@ import MessagesLoadingSkeleton from './MessagesLoadingSkeleton'
 import MessageInput from './MessageInput'
 
 const ChatContainer = () => {
-    const {selectedUser, getMessagesByUserId, messages, isMessagesLoading} =useChatStore()
+    const {selectedUser, getMessagesByUserId, messages, isMessagesLoading, subscribeToMessages, unsubscribeFromMessage} =useChatStore()
     const {authUser} = useAuthStore();
     const scrollBottomRef = useRef(null);
 
     useEffect(() => {
         getMessagesByUserId(selectedUser._id)
-    }, [selectedUser, getMessagesByUserId])
+        subscribeToMessages();
+        return () => {
+            unsubscribeFromMessage();
+        }
+    }, [selectedUser, getMessagesByUserId, subscribeToMessages, unsubscribeFromMessage])
 
     useEffect(() => {
         scrollBottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages])
+
     return (
         <>
             <ChatHeader/>
@@ -25,8 +30,8 @@ const ChatContainer = () => {
                 {messages.length > 0 && !isMessagesLoading ? (
                     <div className='max-w-3xl mx-auto space-y-6'>
                         {messages.map((msg) => (
-                            <div key={msg._id} className={`chat ${msg.sender === authUser._id ? "chat-end" : "chat-start"}`} >
-                                <div className={`chat-bubble ${msg.sender === authUser._id ? "chat-bubble-primary" : "chat-bubble-secondary"}`} >
+                            <div key={msg._id} className={`chat ${msg.senderId === authUser._id ? "chat-end" : "chat-start"}`} >
+                                <div className={`chat-bubble ${msg.senderId === authUser._id ? "chat-bubble-accent" : "chat-bubble-secondary"}`} >
                                     {msg.image && (
                                         <img src={msg.image} alt="shared" className='rounded-lg h-48 object-cover' />
                                     )}
